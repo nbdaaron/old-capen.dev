@@ -20,6 +20,15 @@ const sio = require('socket.io');
 const fs = require('fs');
 const path = require('path');
 
+// Authentication (Passport.js) Dependencies
+const passport = require('passport');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+// Strategy for Username/Password Authentication
+const localStrategy = require('./login_strategies/local');
+// Strategy for Guest User Authentication
+const dummyStrategy = require('./login_strategies/dummy');
+
 // Imported Files
 const schemaFile = fs.readFileSync(path.resolve(__dirname, 'schema.graphql'), 'utf8');
 const config = require('./config');
@@ -34,29 +43,69 @@ const app = express();
 app.engine('handlebars', handlebars({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
+app.use(session(config.sessionSettings));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use('/graphql', graphqlHTTP({
 	schema: buildSchema(schemaFile),
 	rootValue: new Root(),
 	graphiql: true
 }));
 
-const credentials = {
-	key: config.privateKey,
-	cert: config.certificate,
-	ca: config.ca
-};
+passport.use(localStrategy);
+
+// User Serialization
+passport.serializeUser((user, done) => {
+	done(null, user.name);
+});
+
+// User Deserialization
+passport.deserializeUser((id, done) => {
+	done(null, {
+		name: 'Capen'
+	});
+});
 
 // Routes
-
 app.get('/', (req, res) => {
 	res.render('home', {
-		a: "Capen"
+		user: req.user,
+		loginError: req.session.loginError
 	});
+
+	delete req.session.loginError;
+});
+
+// Authentication Route
+// TODO: PassportJS Custom Authentication Callback for
+// Injecting messages with failure redirect
+app.post('/login', (req, res, next) => {
+	passport.authenticate('local', (err, user, info) => {
+		if (err) {
+			return next(err);
+		}
+		if (!user) {
+			req.session.loginError = info;
+			return res.redirect('/');
+		}
+		req.login(user, (loginErr) => {
+	      if (loginErr) {
+	        return next(loginErr);
+	      }
+	      return res.redirect('/');
+	    });
+	})(req, res, next);
+});
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/');
 });
 
 // Starting both http & https servers
 const httpServer = http.createServer(app);
-const httpsServer = https.createServer(credentials, app);
+const httpsServer = https.createServer(config.httpsCredentials, app);
 
 httpServer.listen(80, () => {
 	console.log('HTTP Server running on port 80');
@@ -66,7 +115,7 @@ httpsServer.listen(443, () => {
 	console.log('HTTPS Server running on port 443');
 });
 
-var io = sio.listen(httpsServer, credentials);
+var io = sio.listen(httpsServer, config.httpsCredentials);
 
 // Socket Connections
 

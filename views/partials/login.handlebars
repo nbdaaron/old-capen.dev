@@ -1,0 +1,12 @@
+{{#if user}}
+	Welcome, {{user.name}}! <form action="/logout"><input value="Logout" type="submit"></form>
+{{else}}
+	{{#if loginError}}
+		{{loginError.message}}
+	{{/if}}
+	<form method="POST" action="/login">
+		<input type="text" name="username" placeholder="Username"></input>
+		<input type="password" name="password" placeholder="Password"></input>
+		<input type="submit"></input>
+	</form>
+{{/if}}
