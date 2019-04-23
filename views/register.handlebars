@@ -1,0 +1,17 @@
+<form method="POST" onSubmit="return checkPassword(this);">
+	<input type="text" name="username" placeholder="Username" required="1"></input>
+	<input type="password" name="password" placeholder="Password" required="1"></input>
+	<input type="password" name="confirm" placeholder="Confirm Password" required="1"></input>
+	<input type="submit" value="Register"></input>
+</form>
+
+<script>
+	function checkPassword(form) {
+		if (form.password.value != form.confirm.value) {
+			alert("Passwords do not match!");
+			return false;
+		}
+		return true;
+	}
+
+</script>

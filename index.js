@@ -54,6 +54,7 @@ app.use('/graphql', graphqlHTTP({
 }));
 
 passport.use(localStrategy);
+passport.use(dummyStrategy);
 
 // User Serialization
 passport.serializeUser((user, done) => {
@@ -63,7 +64,7 @@ passport.serializeUser((user, done) => {
 // User Deserialization
 passport.deserializeUser((id, done) => {
 	done(null, {
-		name: 'Capen'
+		name: id
 	});
 });
 
@@ -71,10 +72,27 @@ passport.deserializeUser((id, done) => {
 app.get('/', (req, res) => {
 	res.render('home', {
 		user: req.user,
-		loginError: req.session.loginError
+		error: req.session.error
 	});
 
-	delete req.session.loginError;
+	delete req.session.error;
+});
+
+app.get('/register', (req, res) => {
+	res.render('register', {
+		error: req.session.error
+	});
+
+	delete req.session.error;
+});
+
+app.get('/guest', passport.authenticate('dummy', {
+	successRedirect: '/',
+	failureRedirect: '/'
+}));
+
+app.post('/register', (req, res) => {
+	res.redirect('/');
 });
 
 // Authentication Route
@@ -86,7 +104,7 @@ app.post('/login', (req, res, next) => {
 			return next(err);
 		}
 		if (!user) {
-			req.session.loginError = info;
+			req.session.error = info;
 			return res.redirect('/');
 		}
 		req.login(user, (loginErr) => {
