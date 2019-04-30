@@ -1,3 +1,4 @@
+<p id="error" style="display:none;">Passwords do not match!</p>
 <form method="POST" onSubmit="return checkPassword(this);">
 	<input type="text" name="username" placeholder="Username" required="1"></input>
 	<input type="password" name="password" placeholder="Password" required="1"></input>
@@ -8,7 +9,7 @@
 <script>
 	function checkPassword(form) {
 		if (form.password.value != form.confirm.value) {
-			alert("Passwords do not match!");
+			document.getElementById('error').style.display = 'block';
 			return false;
 		}
 		return true;
