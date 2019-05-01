@@ -19,4 +19,19 @@ module.exports = (app) => {
 
 		delete req.session.error;
 	});
+
+	app.get('/vipArea', enforceLoggedIn, (req, res) => {
+		res.send('This is the super secret area haha. Not much to see here.');
+	});
+
+}
+
+function enforceLoggedIn(req, res, next) {
+    if (req.user) {
+      	return next();
+    }
+    req.session.error = { 
+    	message: 'You must be logged in to see that!'
+    };
+  	res.redirect('/');
 }

@@ -9,6 +9,11 @@ const dummyStrategy = require('./login_strategies/dummy');
 // Configuration file
 const config = require('./config');
 
+// Database Access for Registration
+const { prisma } = require('./generated/prisma-client');
+
+// Encryption library for password hashing
+const bcrypt = require('bcrypt');
 
 /**
 * Called to setup authentication routes.
@@ -24,14 +29,19 @@ module.exports = (app) => {
 
 	// User Serialization
 	passport.serializeUser((user, done) => {
-		done(null, user.name);
+		done(null, user.id);
 	});
 
 	// User Deserialization
-	passport.deserializeUser((id, done) => {
-		done(null, {
-			name: id
-		});
+	passport.deserializeUser(async (id, done) => {
+		if (id.startsWith('*Guest')) {
+			return done(null, {
+				id,
+				username: id.slice(1)
+			});
+		}
+		let user = await prisma.user({ id });
+		done(null, user);
 	});
 
 	app.get('/guest', passport.authenticate('dummy', {
@@ -39,8 +49,29 @@ module.exports = (app) => {
 		failureRedirect: '/'
 	}));
 
-	app.post('/register', (req, res) => {
+	app.post('/register', async (req, res) => {
+		// We already have a check that password = confirm password on frontend.
+		// We'll have one more backend-side check in case we have some sneaky users.
+		if (req.body.password != req.body.confirm) {
+			req.session.error = { message: 'Passwords do not match!' };
+			res.redirect('/register');
+			return;
+		}
+		let passHash = await bcrypt.hash(req.body.password, config.saltRounds);
+		try {
+			let user = await prisma.createUser({
+				username: req.body.username,
+				password: passHash,
+				email: req.body.email
+			});
+		} catch {
+			req.session.error = { message: 'A user with this username already exists!' };
+			res.redirect('/register');
+			return;
+		}
+
 		res.redirect('/');
+		
 	});
 
 	// Authentication Route

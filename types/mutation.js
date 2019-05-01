@@ -1,14 +1,5 @@
-class Root {
-
-	async users(args, context, info) {
-		return context.prisma.users();
-	}
-
-	async addUser(args, context, info) {
-		return context.prisma.createUser(args);
-	}
-
-	async addFriends(args, context, info) {
+module.exports = {
+	addFriends: async (root, args, context, info) => {
 		if (args.from == args.to) {
 			throw new Error("You cannot be friends with yourself!!");
 		}
@@ -40,5 +31,3 @@ class Root {
 		return p1;
 	}
 }
-
-module.exports = Root;

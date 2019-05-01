@@ -1,5 +1,5 @@
 {{#if user}}
-	Welcome, {{user.name}}! <form action="/logout"><input value="Logout" type="submit"></form>
+	Welcome, {{user.username}}! <form action="/logout"><input value="Logout" type="submit"></form>
 {{else}}
 	{{#if error}}
 		{{error.message}}

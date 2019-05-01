@@ -4,20 +4,16 @@ const https = require('https');
 const express = require('express');
 
 // GraphQL Dependencies
-const graphqlHTTP = require('express-graphql');
-const { buildSchema } = require('graphql');
+const { GraphQLServer } = require('graphql-yoga');
 
 // Prisma
 const { prisma } = require('./generated/prisma-client');
 
 // GraphQL Types
-const Root = require('./types/root');
+const resolvers = require('./types/resolvers');
 
 // Handlebars
 const handlebars = require('express-handlebars');
-
-// Socket.IO
-const sio = require('socket.io');
 
 // Filesystem Dependencies
 const fs = require('fs');
@@ -31,44 +27,30 @@ const setupPageRoutes = require('./page-routes');
 const schemaFile = fs.readFileSync(path.resolve(__dirname, 'schema.graphql'), 'utf8');
 const config = require('./config');
 
-// TODO:
-// ABSTRACT ALL SOCKET.IO CALLS/CONNECTIONS INTO SEPARATE FILES (PER-CONTENT BASIS)
+// Redirect all HTTP Calls to HTTPS
+http.createServer(function (req, res) {
+    res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+    res.end();
+}).listen(80);
 
-const app = express();
+const server = new GraphQLServer({
+	typeDefs: schemaFile, 
+	resolvers: resolvers,
+	context: { prisma }
+});
+
+const app = server.express;
 
 app.engine('handlebars', handlebars({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
-app.use('/graphql', graphqlHTTP({
-	schema: buildSchema(schemaFile),
-	rootValue: new Root(),
-	context: { prisma },
-	graphiql: true
-}));
-
 setupAuthRoutes(app);
 setupPageRoutes(app);
 
-// Starting both http & https servers
-const httpServer = http.createServer(app);
-const httpsServer = https.createServer(config.httpsCredentials, app);
-
-httpServer.listen(3000, () => {
-	console.log('HTTP Server running on port 3000');
+server.start({
+	playground: '/graphql',
+	https: config.httpsCredentials,
+	port: 443
+}, () => {
+	console.log('Listening on port 443.');
 });
-
-httpsServer.listen(3001, () => {
-	console.log('HTTPS Server running on port 3001');
-});
-
-var io = sio.listen(httpsServer, config.httpsCredentials);
-
-// Socket Connections
-
-io.on('connection', (socket) => {
-	generateUser(socket);
-});
-
-function generateUser(socket) {
-	socket.emit('NewUsername', 'BOB');
-}
