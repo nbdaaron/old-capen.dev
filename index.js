@@ -36,7 +36,10 @@ http.createServer(function (req, res) {
 const server = new GraphQLServer({
 	typeDefs: schemaFile, 
 	resolvers: resolvers,
-	context: { prisma }
+	context: (contextParameters) => {
+		let user = contextParameters.request.user;
+		return { prisma, user } 
+	}
 });
 
 const app = server.express;
@@ -44,8 +47,11 @@ const app = server.express;
 app.engine('handlebars', handlebars({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
-setupAuthRoutes(app);
-setupPageRoutes(app);
+// Expose all public folder contents
+server.use(express.static('public'));
+
+setupAuthRoutes(server);
+setupPageRoutes(server);
 
 server.start({
 	playground: '/graphql',

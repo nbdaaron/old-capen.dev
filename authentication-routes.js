@@ -57,6 +57,11 @@ module.exports = (app) => {
 			res.redirect('/register');
 			return;
 		}
+		if (req.body.username.startsWith('*')) {
+			req.session.error = { message: 'Usernames cannot starts with the "*" character!' };
+			res.redirect('/register');
+			return;
+		}
 		let passHash = await bcrypt.hash(req.body.password, config.saltRounds);
 		try {
 			let user = await prisma.createUser({
