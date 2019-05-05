@@ -6,8 +6,6 @@ const { getUser } = require('../utils');
 // Guest IDs are always increasing. They start at a random value and increment randomly.
 var guestId = parseInt(Math.random() * 50000) + 20000;
 
-var chatMessageId = 100;
-
 module.exports = {
 	/*
 	 * Attempts to login with the specified credentials
