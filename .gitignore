@@ -1,6 +1,9 @@
 keys/
 config.js
 generated/
+client/build/
+client/node_modules/
+client/src/constants.js
 
 gs
 logs

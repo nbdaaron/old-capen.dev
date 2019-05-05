@@ -18,11 +18,11 @@
     "graphql": "^14.2.1",
     "graphql-yoga": "^1.17.4",
     "handlebars": "^4.1.2",
+    "jsonwebtoken": "^8.5.1",
     "passport": "^0.4.0",
     "passport-dummy": "0.0.1",
     "passport-local": "^1.0.0",
     "prisma": "^1.31.2",
-    "prisma-client-lib": "^1.31.2",
     "socket.io": "^2.2.0"
   }
 }

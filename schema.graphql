@@ -1,14 +1,45 @@
 type Query {
 	users: [User!]!
+	user: User
 }
 
 type Mutation {
-	addFriends(from: ID, to: ID): User
+	register(user: UserInput!): LoginToken!
+	login(user: LoginInput!): LoginToken!
+	guestLogin: LoginToken!
+	addFriends(from: ID!, to: ID!): User!
+	sendChatMessage(message: String!): String!
+}
+
+type Subscription {
+    chatMessage: ChatMessage
+}
+
+type ChatMessage {
+	username: String!
+	message: String!
+}
+
+type LoginToken {
+	id: ID!
+	token: String!
 }
 
 type User {
 	id: ID!,
-	username: String!,
-	email: String!,
+	username: String!
+	email: String!
 	friends: [User]
+}
+
+input LoginInput {
+	username: String!
+	password: String!
+}
+
+input UserInput {
+	username: String!
+	password: String!
+	confirm: String!
+	email: String!
 }
