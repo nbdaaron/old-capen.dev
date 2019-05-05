@@ -2,6 +2,10 @@ import React from 'react';
 import { Redirect } from 'react-router-dom';
 import { UserContext } from '../contexts/UserContext';
 
+/*
+ * Profile page for user.
+ * Displays information about the current logged in account.
+ */
 class Profile extends React.Component {
 	render() {
 

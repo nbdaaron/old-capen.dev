@@ -10,6 +10,16 @@ export const GET_USER = gql`
   	}
 `;
 
+export const GET_CHAT_MESSAGES = gql`
+  {
+    getChatMessages {
+      messageId
+      username
+      message
+    }
+  }
+`;
+
 export const SIGNUP_MUTATION = gql`
   mutation RegisterMutation($user: UserInput!) {
     register(user: $user) {
@@ -46,6 +56,7 @@ export const SEND_CHAT_MESSAGE_MUTATION = gql`
 export const CHAT_MESSAGE_SUBSCRIPTION = gql`
   subscription chatMessage {
     chatMessage {
+      messageId
       username
       message
     }

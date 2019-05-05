@@ -6,6 +6,8 @@ const { getUser } = require('../utils');
 // Guest IDs are always increasing. They start at a random value and increment randomly.
 var guestId = parseInt(Math.random() * 50000) + 20000;
 
+var chatMessageId = 100;
+
 module.exports = {
 	/*
 	 * Attempts to login with the specified credentials
@@ -72,10 +74,15 @@ module.exports = {
 	sendChatMessage: async (root, args, context, info) => {
 		let user = getUser(context);
 		console.log("CHAT MESSAGE: " + user.username + ": " + args.message);
-		context.pubsub.publish(config.channels.homeChatChannel, { chatMessage: { 
-			username: user.username, 
+		let message = await context.prisma.createChatMessage({
+			username: user.username,
 			message: args.message
-		} });
+		});
+		context.pubsub.publish(config.channels.homeChatChannel, { chatMessage: {
+			messageId: message.messageId,
+			username: message.username, 
+			message: message.message
+		}});
 		return args.message;
 	},
 	/*

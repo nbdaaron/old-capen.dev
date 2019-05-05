@@ -1,11 +1,12 @@
 import React from 'react';
-import { SEND_CHAT_MESSAGE_MUTATION, CHAT_MESSAGE_SUBSCRIPTION } from '../queries';
-import { Mutation, Subscription } from 'react-apollo';
+import { GET_CHAT_MESSAGES, SEND_CHAT_MESSAGE_MUTATION, CHAT_MESSAGE_SUBSCRIPTION } from '../queries';
+import { Query, Mutation } from 'react-apollo';
 import { UserContext } from '../contexts/UserContext';
 
-
+/*
+ * Chat Box Component
+ */
 class Chat extends React.Component {
-
 
 	constructor(props) {
 		super(props);
@@ -15,7 +16,6 @@ class Chat extends React.Component {
 		};
 
 		this.handleChange = this.handleChange.bind(this);
-		this.sendMessage = this.sendMessage.bind(this);
 		this.clearValue = this.clearValue.bind(this);
 	}
 
@@ -25,44 +25,51 @@ class Chat extends React.Component {
 		});
 	}
 
-	sendMessage(mutation) {
-		mutation();
-	}
-
 	clearValue() {
 		this.setState({value: ''});
 	}
 
-	/*appendMessage(data) {
-		let message = `${data.data.chatMessage.username}:${data.data.chatMessage.message}`;
-		if (this.state.messages[this.state.messages.length-1] === message) {
-			return false;
-		}
-		this.setState({ messages: this.state.messages.concat(message)});
-		return false;
-	}*/
+	subscribeForMoreMessages(subscribeToMore) {
+		subscribeToMore({
+		    document: CHAT_MESSAGE_SUBSCRIPTION,
+		    updateQuery: (prev, { subscriptionData }) => {
+		      	if (!subscriptionData.data) return prev;
+		      	const newMessage = subscriptionData.data.chatMessage;
+		      	const exists = prev.getChatMessages.find(({ messageId }) => messageId === newMessage.messageId);
+		      	if (exists) return prev;
+		      	return Object.assign({}, prev, {
+		        	getChatMessages: [...prev.getChatMessages, newMessage]
+		      	});
+		    }
+	  	});
+	}
 
 	render() {
 		return (
 			<UserContext.Consumer>
 				{({user, updateUser}) => (
 				<article>
-					<Subscription subscription={CHAT_MESSAGE_SUBSCRIPTION}>
-				    {( data, loading ) => {
-				    	return false;
-				    	//if (loading || !data.data) return false;
-				    	//else return this.appendMessage(data);
+					<Query query={GET_CHAT_MESSAGES}>
+    				{({ loading, error, data, subscribeToMore }) => {
+      					if (loading) return <p>Fetching</p>
+          				if (error) return <p>Error</p>
+          				this.subscribeForMoreMessages(subscribeToMore);
+          				const messagesToRender = data.getChatMessages;
+          				return (
+          					<section>
+          						{messagesToRender.map((message, index) => (
+				                <p key={message.messageId} index={index}>{message.username}: {message.message}</p>
+				              ))}
+          					</section>
+          				);
 				    }}
-				  	</Subscription>
-				  	{/*this.state.messages.map((value, index) => {
-				        return <p>{value}</p>
-				    })*/}
-					<textarea placeholder={true ? "Enter Message Here" : "You must be logged in to send messages!"}
-						id="text" rows="3" disabled={false} onChange={this.handleChange} value={this.state.value}></textarea>
+  					</Query>
+					<textarea placeholder={user ? "Enter Message Here" : "You must be logged in to send messages!"}
+						id="text" rows="3" disabled={!user} onChange={this.handleChange} value={this.state.value}></textarea>
 					<Mutation mutation={SEND_CHAT_MESSAGE_MUTATION} variables={{message: this.state.value}}
 						onCompleted={this.clearValue}>
 						{(mutation, {loading, error}) => (
-							<button onClick={() => this.sendMessage(mutation)} disabled={!user}>Send</button>
+							<button onClick={mutation} disabled={!user}>Send</button>
 						)}
 					</Mutation>
 				</article>

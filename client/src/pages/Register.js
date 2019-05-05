@@ -4,6 +4,9 @@ import { SIGNUP_MUTATION } from '../queries';
 import { AUTH_TOKEN } from '../constants';
 import { UserContext } from '../contexts/UserContext';
 
+/*
+ * Registration page
+ */
 class Register extends React.Component {
 
 	constructor(props) {

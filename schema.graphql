@@ -1,6 +1,7 @@
 type Query {
 	users: [User!]!
 	user: User
+	getChatMessages: [ChatMessage!]!
 }
 
 type Mutation {
@@ -16,6 +17,7 @@ type Subscription {
 }
 
 type ChatMessage {
+	messageId: ID!
 	username: String!
 	message: String!
 }

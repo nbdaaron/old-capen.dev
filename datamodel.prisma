@@ -5,3 +5,10 @@ type User {
   password: String!
   friends: [User]! @relation(link: INLINE)
 }
+
+type ChatMessage {
+	messageId: ID! @id
+	created_at: DateTime! @createdAt
+	username: String!
+	message: String!
+}

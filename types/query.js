@@ -24,5 +24,15 @@ module.exports = {
 		} catch {
 			return null;
 		}
+	},
+	/**
+	 * Retrieves the last 5 chat messages.
+	 */
+	getChatMessages: (root, args, context, info) => {
+		// let user = getUser(context);
+		return context.prisma.chatMessages({
+			orderBy: 'created_at_ASC',
+			last: 5
+		});
 	}
 }

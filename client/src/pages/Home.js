@@ -3,6 +3,10 @@ import {  Link } from 'react-router-dom';
 import Login from '../components/Login';
 import Chat from '../components/Chat';
 
+
+/*
+ * Homepage for https://www.capen.dev/
+ */
 class Home extends React.Component {
 	render() {
 		return (
