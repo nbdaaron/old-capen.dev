@@ -14,10 +14,10 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { GET_USER } from './queries';
 
 import { UserContext } from './contexts/UserContext';
-import { AUTH_TOKEN } from './constants';
+import { AUTH_TOKEN, HTTP_URI, WSS_URI } from './constants';
 
 const httpLink = new HttpLink({
-  	uri: 'https://capen.dev:3001/',
+  	uri: HTTP_URI,
 });
 
 const middlewareLink = new ApolloLink((operation, forward) => {
@@ -33,7 +33,7 @@ const middlewareLink = new ApolloLink((operation, forward) => {
 const authorizedLink = middlewareLink.concat(httpLink);
 
 const wsLink = new WebSocketLink({
-  	uri: 'wss://capen.dev:3001/',
+  	uri: WSS_URI,
   	options: {
     	lazy: true,
     	reconnect: true,
@@ -61,18 +61,6 @@ const client = new ApolloClient({
   	link,
   	cache: new InMemoryCache()
 });
-
-/*const client = new ApolloClient({
-	uri: 'https://localhost:3001/',
-	request: (operation) => {
-	    const token = localStorage.getItem(AUTH_TOKEN);
-	    operation.setContext({
-	      	headers: {
-	        	authorization: token || ''
-	      	}
-	    });
-	}
-});*/
 
 class App extends React.Component {
 

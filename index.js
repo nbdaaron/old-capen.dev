@@ -1,5 +1,7 @@
 // Express Dependencies
-const http = require('http');
+var express = require('express');
+var https = require('https');
+var http = require('http');
 
 // Authentication Dependencies
 const passport = require('passport');
@@ -22,10 +24,12 @@ const schemaFile = fs.readFileSync(path.resolve(__dirname, 'schema.graphql'), 'u
 const config = require('./config');
 
 // Redirect all HTTP Calls to HTTPS
-http.createServer(function (req, res) {
-    res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
-    res.end();
-}).listen(80);
+var app = express();
+
+http.createServer(app).listen(80);
+https.createServer(config.httpsCredentials, app).listen(443);
+
+app.use(express.static('client/build'));
 
 const pubsub = new PubSub();
 
