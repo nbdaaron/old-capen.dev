@@ -12,7 +12,7 @@ function getUser(context) {
 }
 
 function getUserFromConnection(connection) {
-	const Authorization = connection.context.headers.authorization;
+	const Authorization = connection.context.authorization;
   	if (Authorization) {
     	const user = jwt.verify(Authorization, config.JWT_SECRET);
     	return user;

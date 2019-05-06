@@ -14,6 +14,7 @@ import { HttpLink } from 'apollo-link-http';
 import { split, ApolloLink } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 // Other Local Imports
 import { GET_USER } from './queries';
@@ -39,30 +40,22 @@ const middlewareLink = new ApolloLink((operation, forward) => {
 
 const authorizedLink = middlewareLink.concat(httpLink);
 
+const wsClient = new SubscriptionClient(WSS_URI, {
+	reconnect: true,
+	connectionParams: () => ({
+		authorization: localStorage.getItem(AUTH_TOKEN) || ''
+	})
+});
 // Link for GraphQL Subscriptions
-const wsLink = new WebSocketLink({
-  	uri: WSS_URI,
-  	options: {
-    	lazy: true,
-    	reconnect: true,
-    	connectionParams: () => {
-      		const token = localStorage.getItem(AUTH_TOKEN);
-	      	return {
-	       		headers: {
-	          		authorization: token || ''
-	        	}
-	      	}
-    	}
-  	},
-})
+const wsLink = new WebSocketLink(wsClient);
 
 const link = split(
-  	({ query }) => {
-    	const { kind, operation } = getMainDefinition(query);
-    	return kind === 'OperationDefinition' && operation === 'subscription';
-  	},
-  	wsLink,
-  	authorizedLink
+	({ query }) => {
+		const { kind, operation } = getMainDefinition(query);
+		return kind === 'OperationDefinition' && operation === 'subscription';
+	},
+	wsLink,
+	authorizedLink
 );
 
 const client = new ApolloClient({
@@ -91,6 +84,8 @@ class App extends React.Component {
 				user: data.data.user
 			});
 		});
+		// Connect Subscription Client with new authorization token.
+		wsClient.tryReconnect();
 	}
 
 	render() {
